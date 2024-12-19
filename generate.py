@@ -190,7 +190,7 @@ def main(args):
 
                 plt.show()
             else:
-                fig, ax = plt.subplots(1, 1, figsize=(12, 6))
+                fig, ax = plt.subplots(1, 1, figsize=(20, 15))
                 for stroke in split_strokes(cumsum(np.array(coords))):
                     plt.plot(stroke[:, 0], -stroke[:, 1])
                 ax.set_title('Handwriting')
