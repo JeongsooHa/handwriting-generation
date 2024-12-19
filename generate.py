@@ -10,16 +10,8 @@ from matplotlib import animation
 import seaborn
 from collections import namedtuple
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--model', dest='model_path', type=str, default=os.path.join('pretrained', 'model-29'))
-parser.add_argument('--text', dest='text', type=str, default=None)
-parser.add_argument('--style', dest='style', type=int, default=None)
-parser.add_argument('--bias', dest='bias', type=float, default=1.)
-parser.add_argument('--force', dest='force', action='store_true', default=False)
-parser.add_argument('--animation', dest='animation', action='store_true', default=False)
-parser.add_argument('--noinfo', dest='info', action='store_false', default=True)
-parser.add_argument('--save', dest='save', type=str, default=None)
-args = parser.parse_args()
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 
 def sample(e, mu1, mu2, std1, std2, rho):
@@ -48,7 +40,7 @@ def cumsum(points):
     return np.concatenate([sums, points[:, 2:]], axis=1)
 
 
-def sample_text(sess, args_text, translation, style=None):
+def sample_text(args, sess, args_text, translation, style=None):
     fields = ['coordinates', 'sequence', 'bias', 'e', 'pi', 'mu1', 'mu2', 'std1', 'std2',
               'rho', 'window', 'kappa', 'phi', 'finish', 'zero_states']
     vs = namedtuple('Params', fields)(
@@ -119,7 +111,7 @@ def sample_text(sess, args_text, translation, style=None):
     return phi_data, window_data, kappa_data, stroke_data, coords
 
 
-def main():
+def main(args):
     with open(os.path.join('data', 'translation.pkl'), 'rb') as file:
         translation = pickle.load(file)
     rev_translation = {v: k for k, v in translation.items()}
@@ -150,7 +142,7 @@ def main():
 
                 style = [styles[0][args.style], styles[1][args.style]]
 
-            phi_data, window_data, kappa_data, stroke_data, coords = sample_text(sess, args_text, translation, style)
+            phi_data, window_data, kappa_data, stroke_data, coords = sample_text(args, sess, args_text, translation, style)
 
             strokes = np.array(stroke_data)
             epsilon = 1e-8
@@ -203,6 +195,12 @@ def main():
                     plt.plot(stroke[:, 0], -stroke[:, 1])
                 ax.set_title('Handwriting')
                 ax.set_aspect('equal')
+                print(f"{args.save = }")
+                if args.save:
+                  plt.xticks([])  # x축 눈금 제거
+                  plt.yticks([])  # y축 눈금 제거
+                  plt.title("Generated handwriting")
+                  plt.savefig(f'/content/sample_data/{args.file_name}.png')
                 plt.show()
 
             if args.animation:
@@ -241,6 +239,26 @@ def main():
             if args.text is not None:
                 break
 
+def get_change_style(args_list=None):
+  os.chdir('/content/handwriting-generation')
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument('--model', dest='model_path', type=str, default=os.path.join('pretrained', 'model-29'))
+  parser.add_argument('--text', dest='text', type=str, default=None)
+  parser.add_argument('--style', dest='style', type=int, default=None)
+  parser.add_argument('--bias', dest='bias', type=float, default=1.)
+  parser.add_argument('--force', dest='force', action='store_true', default=False)
+  parser.add_argument('--animation', dest='animation', action='store_true', default=False)
+  parser.add_argument('--noinfo', dest='info', action='store_false', default=True)
+  parser.add_argument('--save', dest='save', action='store_true', default=False)
+  parser.add_argument('--file_name', dest='file_name', type=str, default='test')
+  # 사용자 입력(args_list가 None이면 명령행 입력 사용)
+  if args_list is not None:
+      args = parser.parse_args(args_list)
+  else:
+      args = parser.parse_args()
+
+  main(args)
 
 if __name__ == '__main__':
-    main()
+  get_change_style()
