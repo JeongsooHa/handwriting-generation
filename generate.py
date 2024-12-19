@@ -190,17 +190,17 @@ def main(args):
 
                 plt.show()
             else:
-                fig, ax = plt.subplots(1, 1)
+                fig, ax = plt.subplots(1, 1, figsize=(12, 6))
                 for stroke in split_strokes(cumsum(np.array(coords))):
                     plt.plot(stroke[:, 0], -stroke[:, 1])
                 ax.set_title('Handwriting')
                 ax.set_aspect('equal')
-                print(f"{args.save = }")
                 if args.save:
                   plt.xticks([])  # x축 눈금 제거
                   plt.yticks([])  # y축 눈금 제거
                   plt.title("Generated handwriting")
                   plt.savefig(f'/content/sample_data/{args.file_name}.png')
+                  print(f'Saved at /content/sample_data/{args.file_name}.png')
                 plt.show()
 
             if args.animation:
